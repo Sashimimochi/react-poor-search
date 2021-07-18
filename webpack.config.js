@@ -22,13 +22,6 @@ module.exports = {
             }
         ]
     },
-    externals: {
-        'react': 'react',
-        'react-dom': 'react-dom',
-        '@material-ui/core': {
-            Button: '@material-ui/core'
-        }
-    },
     output: {
         path: path.join(__dirname, "examples/dist"),
         filename: "bundle.js"
