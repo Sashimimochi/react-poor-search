@@ -8,3 +8,5 @@ You upload excel file to make search target.
 ```bash
 npm install react-poor-search
 ```
+
+[Demo Page](https://sashimimochi.github.io/react-poor-search/)
