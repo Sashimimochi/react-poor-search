@@ -1,6 +1,6 @@
 {
   "name": "@Sashimimochi/react-poor-search",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
@@ -13,7 +13,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Sashimimochi",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "peerDependencies": {
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
