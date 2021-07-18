@@ -1,0 +1,39 @@
+{
+  "name": "@Sashimimochi/react-poor-search",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "prepublishOnly": "npm run transpile",
+    "build": "webpack --mode production",
+    "deploy": "gh-pages -d examples/dist",
+    "publish-demo": "npm run build && npm run deploy",
+    "start": "webpack-dev-server --mode development",
+    "transpile": "babel src -d dist --copy-files",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Sashimimochi",
+  "license": "ISC",
+  "peerDependencies": {
+    "react": "^16.14.0",
+    "react-dom": "^16.14.0",
+    "xlsx": "^0.17.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.2.0",
+    "@babel/core": "^7.2.0",
+    "@babel/preset-env": "^7.2.0",
+    "@babel/preset-react": "^7.0.0",
+    "babel-loader": "^8.0.4",
+    "css-loader": "^2.0.0",
+    "gh-pages": "^2.0.1",
+    "html-webpack-plugin": "^3.2.0",
+    "react": "^16.14.0",
+    "react-dom": "^16.14.0",
+    "style-loader": "^0.23.1",
+    "webpack": "^4.27.1",
+    "webpack-cli": "^3.1.2",
+    "webpack-dev-server": "^3.1.10",
+    "xlsx": "^0.17.0"
+  }
+}

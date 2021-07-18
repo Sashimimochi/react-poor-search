@@ -1,0 +1,135 @@
+*,
+*:before,
+*:after {
+    -webkit-box-sizing: inherit;
+    box-sizing: inherit;
+}
+
+html {
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    font-size: 62.5%;
+}
+
+button.btn-border {
+    border: 2px solid #66BB6A;
+    border-radius: 0;
+    background: #fff;
+}
+
+button.btn-border:hover {
+    color: #fff;
+    background: #66BB6A;
+}
+
+.btn,
+button.btn {
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1.5;
+    position: relative;
+    display: inline-block;
+    padding: 1rem 4rem;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-transition: all 0.3s;
+    transition: all 0.3s;
+    text-align: center;
+    vertical-align: middle;
+    text-decoration: none;
+    letter-spacing: 0.1em;
+    color: #212529;
+    border-radius: 0.5rem;
+}
+
+*::-webkit-input-placeholder {
+    color: #212529;
+}
+*:-moz-placeholder {
+    color: #212529;
+}
+*::-moz-placeholder {
+    color: #212529;
+}
+*:-ms-input-placeholder {
+    color: #212529;
+}
+
+#containter {
+    text-align: center;
+}
+
+h3.subtitle {
+    color: #212529;
+    font-weight: bold;
+    font-size: 20px;
+    margin-top: 50px;
+}
+
+.textbox {
+    margin-top: 50px;
+    border: 2px solid #66BB6A;
+    color: #212529;
+    opacity: .7;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: left;
+    width: 400px;
+    transition: all .3s;
+    -webkit-transition: all .3s;
+    -moz-transition: all .3s;
+    font-size: 16px;
+    outline: none;
+    background-color: #fff;
+}
+
+.styled-select {
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    appearance: none;
+    display: inline-block;
+    width: 100%;
+    max-width: 200px;
+    margin: 1em 0;
+    padding: 0.6em 1.5em 0.6em 0.5em;
+    line-height: 1.4;
+    font-size: 1.5em;
+    font-weight: 700;
+    color: #212529;
+    border-radius: 10px;
+    background-color: #fff;
+    border: solid 2px #66BB6A;
+    box-shadow: 0 3px 3px -2px rgba(3, 29, 41, 0.15);
+    background-image: linear-gradient(45deg, transparent 50%, rgba(0,0,0,0.4) 50%),  linear-gradient(135deg, rgba(0,0,0,0.4) 50%, transparent 50%);
+    background-size: 5px 5px, 5px 5px;
+    background-position: calc(100% - 15px) 50%, calc(100% - 10px) 50%;
+    background-repeat: no-repeat;
+}
+.styled-select:focus {
+    outline: 0;
+    border-color: #66BB6A;
+}
+.styled-select::-ms-expand {
+    display: none;
+}
+
+table.items {
+    width: 80%;
+    border-spacing: 0;
+    margin: 10% auto;
+}
+th.item {
+    border-bottom: 2px solid #c5c5c5;
+    text-align: left;
+    padding: 5px;
+    width: 50%;
+}
+th.header {
+    background-color: #66BB6A;
+    color: #fff;
+    padding: 10px;
+    width: 50%;
+}
