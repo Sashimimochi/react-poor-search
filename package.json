@@ -15,7 +15,10 @@
   "author": "Sashimimochi",
   "license": "Apache-2.0",
   "private": false,
-  "keywords": ["excel", "react"],
+  "keywords": [
+    "excel",
+    "react"
+  ],
   "repository": "https://github.com/Sashimimochi/react-poor-search",
   "peerDependencies": {
     "react": "^16.14.0",
@@ -23,9 +26,9 @@
     "xlsx": "^0.17.0"
   },
   "devDependencies": {
-    "@babel/cli": "^7.2.0",
-    "@babel/core": "^7.2.0",
-    "@babel/preset-env": "^7.2.0",
+    "@babel/cli": "^7.15.4",
+    "@babel/core": "^7.15.5",
+    "@babel/preset-env": "^7.15.4",
     "@babel/preset-react": "^7.0.0",
     "babel-loader": "^8.0.4",
     "babel-plugin-react-require": "^3.1.3",
@@ -37,9 +40,9 @@
     "style-loader": "^0.23.1",
     "webpack": "^4.27.1",
     "webpack-cli": "^3.1.2",
-    "webpack-dev-server": "^3.1.10"
+    "webpack-dev-server": "^4.1.1"
   },
   "dependencies": {
-    "xlsx": "^0.17.0"
+    "xlsx": "^0.17.1"
   }
 }
