@@ -1,6 +1,8 @@
 import React from 'react';
 import XLSX from 'xlsx';
 import './styles.css';
+import { distance } from 'fastest-levenshtein';
+import { trigram } from 'n-gram';
 
 class ReactPoorSearch extends React.Component {
     constructor(props) {
@@ -14,13 +16,14 @@ class ReactPoorSearch extends React.Component {
             excelData: [],
             searchTarget: "question",
             keys: [],
+            tokenizedExcelData: [],
         };
         this.handleChange = this.handleChange.bind(this);
     }
 
     handleChange(event) {
         this.setState({
-            hitItems: this.searchText(event.target.value.toLowerCase())
+            hitItems: this.searchDocs(event.target.value.toLowerCase())
         });
     }
 
@@ -41,6 +44,17 @@ class ReactPoorSearch extends React.Component {
                 this.setState({ excelData: data })
                 this.setState({ keys: Object.keys(data[0]) })
                 this.setState({ searchTarget: Object.keys(data[0])[0] })
+
+                var tokenizedExcelData = new Array();
+                data.map((doc) => {
+                    var tokenizedDoc = new Object();
+                    var key = Object.keys(doc)
+                    key.map((k) => {
+                        tokenizedDoc[k] = this.tokenizeText(doc[k])
+                    })
+                    tokenizedExcelData.push(tokenizedDoc)
+                })
+                this.setState({ tokenizedExcelData: tokenizedExcelData })
             })
         }
     }
@@ -53,18 +67,28 @@ class ReactPoorSearch extends React.Component {
         );
     }
 
-    searchText(keyword) {
-        const hitItems = this.state.excelData.filter((item, index) => {
-            let searchTarget = item[this.state.searchTarget]
-            if (searchTarget.search(keyword) !== -1) {
-                let hitItem = new Object();
-                this.state.keys.map((key) => {
-                    hitItem[key] = item[key]
+    searchDocs(keyword) {
+        const keywords = this.tokenizeText(keyword)
+        const isHit = this.state.tokenizedExcelData.map((doc, _) => {
+            var targetDoc = doc[this.state.searchTarget]
+            var hitDoc = targetDoc.filter((sent, _) => {
+                var hits = keywords.filter((keySent, _) => {
+                    if (distance(sent, keySent) <= 1) {
+                        return true
+                    }
                 })
-                return hitItem
+                if (hits.length > 0) {
+                    return true
+                }
+            })
+            if (hitDoc.length > 0) {
+                return true
             }
         })
-        return hitItems;
+
+        return this.state.excelData.filter((doc, index) => {
+            return isHit[index]
+        })
     }
 
     renderTableCell(item) {
@@ -105,6 +129,10 @@ class ReactPoorSearch extends React.Component {
                 {this.renderTableComponent(items)}
             </table>
         );
+    }
+
+    tokenizeText(text) {
+        return trigram(text)
     }
 
     render() {
