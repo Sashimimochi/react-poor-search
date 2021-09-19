@@ -15,7 +15,7 @@ class ReactPoorSearch extends React.Component {
             fileName: "",
             excelData: [],
             searchTarget: "question",
-            keys: [],
+            keys: ["検索対象を選ぶ"],
             tokenizedExcelData: [],
         };
         this.handleChange = this.handleChange.bind(this);
@@ -143,7 +143,6 @@ class ReactPoorSearch extends React.Component {
                         onChange={(e) => this.setState({ searchTarget: e.target.value })}
                         className="styled-select"
                     >
-                        <option value="">検索対象を選ぶ</option>
                         {this.selectMenu()}
                     </select>
                 </div>
@@ -153,7 +152,7 @@ class ReactPoorSearch extends React.Component {
                 <h3 className="subtitle">ヒットしたデータ一覧</h3>
                 {this.renderTable(this.state.hitItems)}
                 <button className="btn btn-border" onClick={() => this.handleTriggerReadFile()}>
-                    Upload
+                    Import
                 </button>
                 <form style={{ display: 'none' }}>
                     <input
