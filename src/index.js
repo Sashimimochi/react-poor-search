@@ -46,15 +46,20 @@ class ReactPoorSearch extends React.Component {
                 this.setState({ searchTarget: Object.keys(data[0])[0] })
 
                 var tokenizedExcelData = new Array();
+                var kanjiOnlyExcelData = new Array();
                 data.map((doc) => {
                     var tokenizedDoc = new Object();
+                    var kanjiOnlyDoc = new Object();
                     var key = Object.keys(doc)
                     key.map((k) => {
                         tokenizedDoc[k] = this.tokenizeText(doc[k])
+                        kanjiOnlyDoc[k] = this.extract_kanji(doc[k])
                     })
                     tokenizedExcelData.push(tokenizedDoc)
+                    kanjiOnlyExcelData.push(kanjiOnlyDoc)
                 })
                 this.setState({ tokenizedExcelData: tokenizedExcelData })
+                this.setState({ kanjiOnlyExcelData: kanjiOnlyExcelData })
             })
         }
     }
@@ -68,27 +73,78 @@ class ReactPoorSearch extends React.Component {
     }
 
     searchDocs(keyword) {
+        const threshold = 1;
+
+        const kjScores = this.kanjiSearch(keyword)
         const keywords = this.tokenizeText(keyword)
-        const isHit = this.state.tokenizedExcelData.map((doc, _) => {
+        const scores = [];
+        const isHit = this.state.tokenizedExcelData.map((doc, idx) => {
             var targetDoc = doc[this.state.searchTarget]
+            var dists = [];
             var hitDoc = targetDoc.filter((sent, _) => {
-                var hits = keywords.filter((keySent, _) => {
-                    if (distance(sent, keySent) <= 1) {
-                        return true
-                    }
+                keywords.map((keySent, _) => {
+                    dists.push(distance(sent, keySent));
                 })
-                if (hits.length > 0) {
+                if (this.calcMin(dists) <= threshold || kjScores[idx] == 0) {
                     return true
                 }
             })
+            scores.push({ index: idx, score: this.calcMin(dists), kjscore: kjScores[idx] });
             if (hitDoc.length > 0) {
                 return true
             }
         })
 
-        return this.state.excelData.filter((doc, index) => {
-            return isHit[index]
+        const sortedScores = this.sortScore(scores)
+        const sortedIsHit = sortedScores.map((score, _) => {
+            return isHit[score.index]
         })
+        const sortedDocs = sortedScores.map((score, _) => {
+            return this.state.excelData[score.index]
+        })
+
+        const hitDocs = sortedDocs.filter((_, index) => {
+            return sortedIsHit[index]
+        })
+        return hitDocs
+    }
+
+    kanjiSearch(keyword) {
+        const kjKeyword = this.extract_kanji(keyword)
+        const kjHitDocs = this.state.kanjiOnlyExcelData.map((doc, _) => {
+            var targetDoc = doc[this.state.searchTarget]
+            if (targetDoc.search(kjKeyword) !== -1) {
+                return 0
+            } else {
+                return 1
+            }
+        })
+        return kjHitDocs;
+    }
+
+    calcMin(list) {
+        if (list.length > 0) {
+            return list.reduce((a, b) => Math.min(a, b))
+        }
+        return list
+    }
+
+    sortScore(list) {
+        list.sort(function (a, b) {
+            if (a.kjscore != b.kjscore) {
+                if (a.kjscore < b.kjscore) {
+                    return -1;
+                }
+                if (a.kjscore > b.kjscore) {
+                    return 1;
+                }
+            }
+            if (a.score != b.score) {
+                return a.score - b.score;
+            }
+            return 0;
+        });
+        return list;
     }
 
     renderTableCell(item) {
@@ -133,6 +189,15 @@ class ReactPoorSearch extends React.Component {
 
     tokenizeText(text) {
         return trigram(text)
+    }
+
+    extract_kanji(text) {
+        const regexp = /([\u{3005}\u{3007}\u{303b}\u{3400}-\u{9FFF}\u{F900}-\u{FAFF}\u{20000}-\u{2FFFF}][\u{E0100}-\u{E01EF}\u{FE00}-\u{FE02}]?)/mug;
+        const res = text.match(regexp)
+        if (res !== null) {
+            return res.join("")
+        }
+        return ""
     }
 
     render() {
