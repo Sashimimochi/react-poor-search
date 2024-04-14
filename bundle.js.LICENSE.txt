@@ -4,9 +4,7 @@ object-assign
 @license MIT
 */
 
-/*! cpexcel.js (C) 2013-present SheetJS -- http://sheetjs.com */
-
-/*! cputils.js (C) 2013-present SheetJS -- http://sheetjs.com */
+/*! sheetjs (C) 2013-present SheetJS -- http://sheetjs.com */
 
 /** @license React v0.19.1
  * scheduler.production.min.js
