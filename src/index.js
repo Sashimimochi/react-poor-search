@@ -1,5 +1,5 @@
 import React from 'react';
-import XLSX from 'xlsx';
+import { read, utils } from 'xlsx';
 import './styles.css';
 import { distance } from 'fastest-levenshtein';
 import { trigram } from 'n-gram';
@@ -37,10 +37,10 @@ class ReactPoorSearch extends React.Component {
         if (fileObj) {
             this.setState({ fileName: fileObj.name })
             fileObj.arrayBuffer().then((buffer) => {
-                const workbook = XLSX.read(buffer, { type: 'buffer', bookVBA: true })
+                const workbook = read(buffer, { type: 'buffer', bookVBA: true })
                 const firstSheetName = workbook.SheetNames[0]
                 const worksheet = workbook.Sheets[firstSheetName]
-                const data = XLSX.utils.sheet_to_json(worksheet)
+                const data = utils.sheet_to_json(worksheet)
                 this.setState({ excelData: data })
                 this.setState({ keys: Object.keys(data[0]) })
                 this.setState({ searchTarget: Object.keys(data[0])[0] })
