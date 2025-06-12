@@ -1,6 +1,6 @@
 {
   "name": "@sashimimochi/react-poor-search",
-  "version": "0.2.18",
+  "version": "0.2.19",
   "description": "React component for the poor search engine",
   "main": "dist/index.js",
   "scripts": {
