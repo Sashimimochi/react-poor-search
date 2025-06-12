@@ -1,0 +1,40 @@
+# .github/workflows/check-version.yml
+name: Version Bump Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+jobs:
+  version-check:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. リポジトリをフルフェッチ
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      # 2. main ブランチの package.json を一時ファイルに取得
+      - name: Fetch base package.json
+        run: |
+          git fetch origin main
+          git show origin/main:package.json > package.base.json
+
+      # 3. ベース／ヘッドのバージョンを取得
+      - name: Read versions
+        id: versions
+        run: |
+          BASE=$(node -p "require('./package.base.json').version")
+          HEAD=$(node -p "require('./package.json').version")
+          echo "BASE_VERSION=$BASE" >> $GITHUB_OUTPUT
+          echo "HEAD_VERSION=$HEAD" >> $GITHUB_OUTPUT
+
+      # 4. バージョン差分チェック。差分なければエラー出力＆終了コード 1
+      - name: Ensure version is bumped
+        run: |
+          if [ "${{ steps.versions.outputs.BASE_VERSION }}" = "${{ steps.versions.outputs.HEAD_VERSION }}" ]; then
+            echo "::error file=package.json::Version not bumped (still ${{ steps.versions.outputs.HEAD_VERSION }})"
+            exit 1
+          fi
