@@ -1,5 +1,5 @@
 import React from 'react';
-import XLSX from 'xlsx';
+import { read, utils } from 'xlsx';
 import './styles.css';
 import { distance } from 'fastest-levenshtein';
 import { trigram } from 'n-gram';
@@ -17,6 +17,7 @@ class ReactPoorSearch extends React.Component {
             searchTarget: "question",
             keys: ["検索対象を選ぶ"],
             tokenizedExcelData: [],
+            threshold: 1
         };
         this.handleChange = this.handleChange.bind(this);
     }
@@ -37,122 +38,66 @@ class ReactPoorSearch extends React.Component {
         if (fileObj) {
             this.setState({ fileName: fileObj.name })
             fileObj.arrayBuffer().then((buffer) => {
-                const workbook = XLSX.read(buffer, { type: 'buffer', bookVBA: true })
+                const workbook = read(buffer, { type: 'buffer', bookVBA: true })
                 const firstSheetName = workbook.SheetNames[0]
                 const worksheet = workbook.Sheets[firstSheetName]
-                const data = XLSX.utils.sheet_to_json(worksheet)
+                const data = utils.sheet_to_json(worksheet)
                 this.setState({ excelData: data })
                 this.setState({ keys: Object.keys(data[0]) })
                 this.setState({ searchTarget: Object.keys(data[0])[0] })
 
-                var tokenizedExcelData = new Array();
-                var kanjiOnlyExcelData = new Array();
-                data.map((doc) => {
-                    var tokenizedDoc = new Object();
-                    var kanjiOnlyDoc = new Object();
-                    var key = Object.keys(doc)
-                    key.map((k) => {
-                        tokenizedDoc[k] = this.tokenizeText(doc[k])
-                        kanjiOnlyDoc[k] = this.extract_kanji(doc[k])
-                    })
-                    tokenizedExcelData.push(tokenizedDoc)
-                    kanjiOnlyExcelData.push(kanjiOnlyDoc)
-                })
-                this.setState({ tokenizedExcelData: tokenizedExcelData })
-                this.setState({ kanjiOnlyExcelData: kanjiOnlyExcelData })
+                const tokenizedExcelData = data.map((doc) => {
+                    const tokenizedDoc = {};
+                    const keys = Object.keys(doc);
+                    keys.forEach((key) => {
+                        tokenizedDoc[key] = this.tokenizeText(doc[key]);
+                    });
+                    return tokenizedDoc;
+                });
+                this.setState({ tokenizedExcelData: tokenizedExcelData });
             })
         }
     }
 
     selectMenu() {
         return (
-            this.state.keys.map((key) => {
-                return <option value={key}>{key}</option>
+            this.state.keys.map((key, index) => {
+                return <option key={index} value={key}>{key}</option>
             })
         );
     }
 
     searchDocs(keyword) {
-        const threshold = 1;
+        const { tokenizedExcelData, searchTarget, excelData, threshold } = this.state;
+        const keywords = this.tokenizeText(keyword);
+        
+        const scores = tokenizedExcelData.map((doc, idx) => {
+            const targetDoc = doc[searchTarget] || [];
+            const dists = keywords.flatMap((keySent) => 
+                targetDoc.map((sent) => distance(sent, keySent))
+            );
+            return { index: idx, score: this.calcMin(dists) };
+        });
 
-        const kjScores = this.kanjiSearch(keyword)
-        const keywords = this.tokenizeText(keyword)
-        const scores = [];
-        const isHit = this.state.tokenizedExcelData.map((doc, idx) => {
-            var targetDoc = doc[this.state.searchTarget]
-            var dists = [];
-            var hitDoc = targetDoc.filter((sent, _) => {
-                keywords.map((keySent, _) => {
-                    dists.push(distance(sent, keySent));
-                })
-                if (this.calcMin(dists) <= threshold || kjScores[idx] == 0) {
-                    return true
-                }
-            })
-            scores.push({ index: idx, score: this.calcMin(dists), kjscore: kjScores[idx] });
-            if (hitDoc.length > 0) {
-                return true
-            }
-        })
-
-        const sortedScores = this.sortScore(scores)
-        const sortedIsHit = sortedScores.map((score, _) => {
-            return isHit[score.index]
-        })
-        const sortedDocs = sortedScores.map((score, _) => {
-            return this.state.excelData[score.index]
-        })
-
-        const hitDocs = sortedDocs.filter((_, index) => {
-            return sortedIsHit[index]
-        })
-        return hitDocs
-    }
-
-    kanjiSearch(keyword) {
-        const kjKeyword = this.extract_kanji(keyword)
-        const kjHitDocs = this.state.kanjiOnlyExcelData.map((doc, _) => {
-            var targetDoc = doc[this.state.searchTarget]
-            if (targetDoc.search(kjKeyword) !== -1) {
-                return 0
-            } else {
-                return 1
-            }
-        })
-        return kjHitDocs;
+        return scores
+            .filter(({ score }) => score <= threshold)
+            .sort((a, b) => a.score - b.score)
+            .map(({ index }) => excelData[index]);
     }
 
     calcMin(list) {
         if (list.length > 0) {
             return list.reduce((a, b) => Math.min(a, b))
         }
-        return list
-    }
-
-    sortScore(list) {
-        list.sort(function (a, b) {
-            if (a.kjscore != b.kjscore) {
-                if (a.kjscore < b.kjscore) {
-                    return -1;
-                }
-                if (a.kjscore > b.kjscore) {
-                    return 1;
-                }
-            }
-            if (a.score != b.score) {
-                return a.score - b.score;
-            }
-            return 0;
-        });
-        return list;
+        return Number.MAX_SAFE_INTEGER; // Return high value when no distances calculated
     }
 
     renderTableCell(item) {
-        return this.state.keys.map((key) => {
+        return this.state.keys.map((key, index) => {
             return (
-                <th className="item">
+                <td key={index} className="item">
                     {item[key]}
-                </th>
+                </td>
             );
         })
     }
@@ -167,9 +112,9 @@ class ReactPoorSearch extends React.Component {
     }
 
     renderTableCellHeader() {
-        return this.state.keys.map((key) => {
+        return this.state.keys.map((key, index) => {
             return (
-                <th className="header">
+                <th key={index} className="header">
                     {key}
                 </th>
             );
@@ -179,25 +124,21 @@ class ReactPoorSearch extends React.Component {
     renderTable(items) {
         return (
             <table className="items">
-                <tr key="header">
-                    {this.renderTableCellHeader()}
-                </tr>
-                {this.renderTableComponent(items)}
+                <tbody>
+                    <tr key="header">
+                        {this.renderTableCellHeader()}
+                    </tr>
+                    {this.renderTableComponent(items)}
+                </tbody>
             </table>
         );
     }
 
     tokenizeText(text) {
-        return trigram(text)
-    }
-
-    extract_kanji(text) {
-        const regexp = /([\u{3005}\u{3007}\u{303b}\u{3400}-\u{9FFF}\u{F900}-\u{FAFF}\u{20000}-\u{2FFFF}][\u{E0100}-\u{E01EF}\u{FE00}-\u{FE02}]?)/mug;
-        const res = text.match(regexp)
-        if (res !== null) {
-            return res.join("")
+        if (typeof text !== 'string') {
+            text = String(text || '');
         }
-        return ""
+        return trigram(text)
     }
 
     render() {
