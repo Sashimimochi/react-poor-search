@@ -121,7 +121,7 @@ table.items {
     border-spacing: 0;
     margin: 10% auto;
 }
-th.item {
+td.item {
     border-bottom: 2px solid #c5c5c5;
     text-align: left;
     padding: 5px;
