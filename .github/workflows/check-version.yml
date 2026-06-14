@@ -6,21 +6,26 @@ on:
     types: [opened, synchronize, reopened]
     branches: [main]
 
+permissions:
+  contents: write
+
 jobs:
   version-check:
     runs-on: ubuntu-latest
     steps:
-      # 1. リポジトリをフルフェッチ
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      # 1. PR の head ブランチをフルフェッチ
+      - name: Checkout pull request branch
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
-      # 2. main ブランチの package.json を一時ファイルに取得
+      # 2. ベースブランチの package.json を一時ファイルに取得
       - name: Fetch base package.json
         run: |
-          git fetch origin main
-          git show origin/main:package.json > package.base.json
+          git fetch https://github.com/${{ github.repository }}.git ${{ github.base_ref }}
+          git show FETCH_HEAD:package.json > package.base.json
 
       # 3. ベース／ヘッドのバージョンを取得
       - name: Read versions
@@ -30,11 +35,33 @@ jobs:
           HEAD=$(node -p "require('./package.json').version")
           echo "BASE_VERSION=$BASE" >> $GITHUB_OUTPUT
           echo "HEAD_VERSION=$HEAD" >> $GITHUB_OUTPUT
-
-      # 4. バージョン差分チェック。差分なければエラー出力＆終了コード 1
-      - name: Ensure version is bumped
-        run: |
-          if [ "${{ steps.versions.outputs.BASE_VERSION }}" = "${{ steps.versions.outputs.HEAD_VERSION }}" ]; then
-            echo "::error file=package.json::Version not bumped (still ${{ steps.versions.outputs.HEAD_VERSION }})"
-            exit 1
+          if [ "$BASE" = "$HEAD" ]; then
+            echo "NEEDS_BUMP=true" >> $GITHUB_OUTPUT
+          else
+            echo "NEEDS_BUMP=false" >> $GITHUB_OUTPUT
           fi
+
+      # 4. バージョンが未更新の場合はパッチバージョンを自動インクリメント
+      - name: Auto bump patch version
+        if: steps.versions.outputs.NEEDS_BUMP == 'true' && github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          npm version patch --no-git-tag-version --no-commit-hooks --ignore-scripts
+          UPDATED=$(node -p "require('./package.json').version")
+          echo "Patch version bumped from ${{ steps.versions.outputs.HEAD_VERSION }} to ${UPDATED}."
+
+      # 5. 自動インクリメントした差分を PR ブランチへ push
+      - name: Commit and push version bump
+        if: steps.versions.outputs.NEEDS_BUMP == 'true' && github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git commit -m "chore: bump patch version"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
+
+      # 6. フォークからの PR は権限上 push できないため、手動更新を促して失敗させる
+      - name: Fail when version cannot be auto bumped
+        if: steps.versions.outputs.NEEDS_BUMP == 'true' && github.event.pull_request.head.repo.full_name != github.repository
+        run: |
+          echo "::error file=package.json::Version not bumped (still ${{ steps.versions.outputs.HEAD_VERSION }}). This workflow cannot push to forked pull requests, so please bump the patch version manually."
+          exit 1
