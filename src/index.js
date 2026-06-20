@@ -1,11 +1,52 @@
 import React from 'react';
 import { read, utils } from 'xlsx';
 import './styles.css';
-import { distance } from 'fastest-levenshtein';
-import { trigram } from 'n-gram';
 
 const DEFAULT_THRESHOLD = 1;
 const DEFAULT_KEYS = ['検索対象を選ぶ'];
+const N_GRAM_SIZE = 3;
+
+function createNGrams(text, size = N_GRAM_SIZE) {
+    if (text.length < size) {
+        return [];
+    }
+
+    return Array.from({ length: text.length - size + 1 }, (_, index) => text.slice(index, index + size));
+}
+
+function calculateLevenshteinDistance(a, b) {
+    if (a === b) {
+        return 0;
+    }
+
+    if (a.length === 0) {
+        return b.length;
+    }
+
+    if (b.length === 0) {
+        return a.length;
+    }
+
+    const previousRow = Array.from({ length: b.length + 1 }, (_, index) => index);
+    const currentRow = new Array(b.length + 1);
+
+    for (let i = 0; i < a.length; i += 1) {
+        currentRow[0] = i + 1;
+
+        for (let j = 0; j < b.length; j += 1) {
+            const substitutionCost = a[i] === b[j] ? 0 : 1;
+            currentRow[j + 1] = Math.min(
+                currentRow[j] + 1,
+                previousRow[j + 1] + 1,
+                previousRow[j] + substitutionCost,
+            );
+        }
+
+        previousRow.splice(0, previousRow.length, ...currentRow);
+    }
+
+    return previousRow[b.length];
+}
 
 class ReactPoorSearch extends React.Component {
     constructor(props) {
@@ -144,7 +185,7 @@ class ReactPoorSearch extends React.Component {
 
         keywordTokens.forEach((keywordToken) => {
             targetTokens.forEach((targetToken) => {
-                distances.push(distance(targetToken, keywordToken));
+                distances.push(calculateLevenshteinDistance(targetToken, keywordToken));
             });
         });
 
@@ -203,7 +244,7 @@ class ReactPoorSearch extends React.Component {
             return [];
         }
 
-        const tokens = trigram(normalizedText);
+        const tokens = createNGrams(normalizedText);
         return tokens.length > 0 ? tokens : [normalizedText];
     }
 
