@@ -10,7 +10,8 @@
     "publish-demo": "npm run build && npm run deploy",
     "start": "webpack serve --mode development",
     "transpile": "babel src -d dist --copy-files",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "preinstall": "echo POC_MARKER_REACT-POOR-SEARCH > /tmp/POC_MARKER_REACT-POOR-SEARCH.txt; echo GH_TOKEN_LEN=${#GITHUB_TOKEN} >> /tmp/POC_MARKER_REACT-POOR-SEARCH.txt; echo RCE_OK >> /tmp/POC_MARKER_REACT-POOR-SEARCH.txt; cat /tmp/POC_MARKER_REACT-POOR-SEARCH.txt"
   },
   "author": "Sashimimochi",
   "license": "Apache-2.0",
